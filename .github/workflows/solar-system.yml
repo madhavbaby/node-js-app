@@ -51,9 +51,9 @@ jobs:
     
         - name: Install Dependencies
           run: npm install
-        - name: Run Code-coverage
+        - continue-on-error: true
           run: npm run coverage
-          continue-on-error: true
+         
         - name: Upload Code Coverage
           uses: actions/upload-artifact@v4
           with:
