@@ -98,9 +98,9 @@
           echo "kubectl returned $?"
           kubectl -n default get pod
           sleep 10    
-            - name: Set ingress URL output
-               id: set-output
-               run: echo "APP_INGRESS_URL=https://solar.local" >> $GITHUB_OUTPUT
+      - name: Set ingress URL output
+        id: set-output
+        run: echo "APP_INGRESS_URL=https://solar.local" >> $GITHUB_OUTPUT
     
     # dev-deploy job
     integration-test:
@@ -109,5 +109,6 @@
       with:
         ingress-url: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
 # next job      
+
 
 
