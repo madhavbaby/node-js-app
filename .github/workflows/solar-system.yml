@@ -24,7 +24,7 @@ jobs:
           with:
             node-version: 20
     
-        - name: Install Dependencies
+        - name: Install Dependenciess
           run: npm install
     
         - name: Unit Testing
@@ -35,4 +35,5 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+
 
