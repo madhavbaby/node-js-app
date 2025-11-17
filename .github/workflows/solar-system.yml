@@ -43,8 +43,8 @@
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - continue-on-error: true
+      - name: npm install
+        continue-on-error: true
         run: npm run coverage
       - uses: actions/upload-artifact@v4
         with:
