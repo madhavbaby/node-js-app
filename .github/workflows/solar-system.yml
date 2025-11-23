@@ -15,7 +15,14 @@ env:
 jobs:
     unit-testing:
         name: Unit Testing
-        runs-on: [ubuntu-latest,macos-latest]
+        strategy:
+           matrix:
+               nodejs_version: [18, 20]
+               operating_system: [ubuntu-latest, macos-latest]
+               exclude:
+                  - nodejs_version: 18
+                    operating_system: macos-latest
+        runs-on: ${{ matrix.operating_system }}
         steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
@@ -52,7 +59,7 @@ jobs:
         - name: Checkout Repository
           uses: actions/checkout@v4
 
-        - name: Setup NodeJS Version
+        - name: Setup NodeJS Version - 18
           uses: actions/setup-node@v4
           with:
             node-version: 18
@@ -71,9 +78,9 @@ jobs:
           continue-on-error: true
           run: npm run code-coverage
           
-        - name: Code-Coverage-Result
-          uses: actions/upload-artifact@v4
+        - name: Archive Coverage Report
+          uses: actions/upload-artifact@v3
           with:
-            name: coverage
-            path: Code-Coverage-Result.xml
-            retention-days: 5
+           name: code-coverage-result
+           path: coverage
+           rentention-days: 5
