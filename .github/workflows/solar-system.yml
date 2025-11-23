@@ -1,212 +1,98 @@
-# name: Solar System Workflow
+name: Solar System Workflow
 
-# on: 
-#   workflow_dispatch:
-#   push:
-#     branches:
-#       - main
-#       - 'feature/*'
-
-# env:
-#   MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
-#   MONGO_USERNAME: superuser
-#   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-    
-# jobs:
-#   unit-testing:
-#     name: Unit Testing
-#     strategy:
-#       matrix:
-#         nodejs_version: [18, 20]
-#         operating_system: [ubuntu-latest, macos-latest]
-#         exclude:
-#         - nodejs_version: 18
-#           operating_system: macos-latest
-#     runs-on: ${{ matrix.operating_system }}
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
-
-
-#       - name: Setup Node.js ${{ matrix.nodejs_version }}
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: ${{ matrix.nodejs_version }}
-
-
-#       - name: Cache NPM dependencies
-#         uses: actions/cache@v4
-#         with:
-#           path: node_modules
-#           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-
-#       - name: Install Dependencies
-#         run: npm install
-
-
-#       - name: Run Unit Tests
-#         run: npm test
-
-
-#       - name: Archive Test Results
-#         if: always()
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: mocha-test-results1
-#           path: test-results1.xml
-
-
-#   code-coverage:
-#     name: Code Coverage
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
-
-
-#       - name: Setup Node.js 18
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: 18
-
-
-#       - name: Cache NPM dependencies
-#         uses: actions/cache@v4
-#         with:
-#           path: node_modules
-#           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-
-
-#       - name: Install Dependencies
-#         run: npm install
-
-
-#       - name: Run Coverage
-#         continue-on-error: true
-#         run: npm run coverage
-
-
-#       - name: Archive Coverage Report
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: coverage-report1
-#           path: corvrage-results1.xml
-
-name: Solar System CI/CD
-
-on:
-  # Allows manual triggering from the GitHub UI
+on: 
   workflow_dispatch:
   push:
     branches:
       - main
-      - 'feature/*' # Runs on main and any feature branch
+      - 'feature/*'
 
 env:
-  # Using template variables for the URI structure
-  MONGO_HOST: supercluster.d83jj.mongodb.net
-  MONGO_DBNAME: superData
+  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
   MONGO_USERNAME: superuser
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-
+    
 jobs:
-  # ====================================================================
-  # JOB 1: UNIT & INTEGRATION TESTING
-  # ====================================================================
   unit-testing:
-    name: Unit & Integration Tests (Node ${{ matrix.nodejs_version }}, ${{ matrix.operating_system }})
+    name: Unit Testing
     strategy:
       matrix:
-        nodejs_version: [18.x, 20.x]
-        operating_system: [ubuntu-latest, macos-latest]
-        exclude:
-          - nodejs_version: 18.x
-            operating_system: macos-latest
+        nodejs_version: [18, 20]
+        operating_system: [ubuntu-latest]
+        # exclude:
+        # - nodejs_version: 18
+        #   operating_system: macos-latest
     runs-on: ${{ matrix.operating_system }}
     steps:
-      - name: ⬇️ Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js ${{ matrix.nodejs_version }}
-        uses: actions/setup-node@v4
+
+      - name: Setup Node.js ${{ matrix.nodejs_version }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs_version }}
 
-      - name: 📦 Cache NPM dependencies
+
+      - name: Cache NPM dependencies
         uses: actions/cache@v4
-        id: npm-cache
         with:
           path: node_modules
-          # FIX: Use robust glob pattern '**/package-lock.json'
-          key: ${{ runner.os }}-${{ matrix.nodejs_version }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
 
       - name: Install Dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm install
 
-      - name: Run Unit Tests
-        run: |
-          npm test
-        env:
-          # Construct MONGO_URI for testing environment
-          MONGO_URI: mongodb+srv://${{ env.MONGO_USERNAME }}:${{ env.MONGO_PASSWORD }}@${{ env.MONGO_HOST }}/${{ env.MONGO_DBNAME }}?authSource=admin&ssl=true
 
-      - name: ⬆️ Archive Test Results
+      - name: Run Unit Tests
+        run: npm test
+
+
+      - name: Archive Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mocha-test-results-${{ matrix.operating_system }}-${{ matrix.nodejs_version }}
+          name: mocha-test-results1
           path: test-results1.xml
 
 
-
-  # ====================================================================
-  # JOB 2: CODE COVERAGE
-  # ====================================================================
   code-coverage:
     name: Code Coverage
-    needs: unit-testing
     runs-on: ubuntu-latest
     steps:
-      - name: ⬇️ Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
 
-      - name: 📦 Cache NPM dependencies
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+
+      - name: Cache NPM dependencies
         uses: actions/cache@v4
-        id: npm-cache-coverage
         with:
           path: node_modules
-          # FIX: Use robust glob pattern '**/package-lock.json'
-          key: ${{ runner.os }}-18.x-node-modules-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
 
       - name: Install Dependencies
-        if: steps.npm-cache-coverage.outputs.cache-hit != 'true'
         run: npm install
+
 
       - name: Run Coverage
         continue-on-error: true
         run: npm run coverage
 
-      - name: ⬆️ Archive Coverage Report
+
+      - name: Archive Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          # FIX: Corrected the typo in the file name
-          path: coverage-results1.xml
+          name: coverage-report1
+          path: corvrage-results1.xml
 
 
 
-  # ====================================================================
-  # JOB 3: LIKELY THE JOB AROUND LINE 143 (Placeholder: Deploy)
-  # ====================================================================
-  # This job represents the one that likely contained the error at line 143.
-  # Assuming a structure similar to the others, a cache step would be present.
-  # deployment:
-  #   name: Deploy to Environment
-  #   needs: code
+
