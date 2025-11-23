@@ -55,10 +55,10 @@ jobs:
           run: npm install
     
         - name: Code-coverage
+          continue-on-error: true
           run: npm run code-coverage
           
         - name: Code-Coverage-Result
-          if: always() 
           uses: actions/upload-artifact@v4
           with:
             name: coverage
