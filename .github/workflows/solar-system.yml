@@ -53,8 +53,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mocha-test-results
-          path: test-results.xml
+          name: mocha-test-results1
+          path: test-results1.xml
 
 
   code-coverage:
@@ -90,5 +90,5 @@ jobs:
       - name: Archive Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: corvrage-results.xml
+          name: coverage-report1
+          path: corvrage-results1.xml
