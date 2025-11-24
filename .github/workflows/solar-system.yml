@@ -276,9 +276,14 @@ jobs:
     - name: Verify replaced manifests
       run: cat kubernetes/development/*.yaml
 
-    - name: Create MongoDB Secret
+    - name: Create MongoDB Secret and Namespace (Conditionally)
       run: |
-          kubectl create namespace ${{ vars.NAMESPACE }}
+          if ! kubectl get namespace ${{ vars.NAMESPACE }} &> /dev/null; then
+              echo "Namespace ${{ vars.NAMESPACE }} not found. Creating it now..."
+              kubectl create namespace ${{ vars.NAMESPACE }}
+          else
+              echo "Namespace ${{ vars.NAMESPACE }} already exists. Skipping creation."
+          fi
           kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
             --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
             --from-literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
