@@ -55,3 +55,48 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Archive Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mocha-test-results1
+          path: test-results1.xml
+
+
+  code-coverage:
+       name: Code Coverage
+       needs: [unit-testing]
+       runs-on: ubuntu-latest
+       steps:
+       - name: Checkout Repository
+         uses: actions/checkout@v4
+
+
+       - name: Setup Node.js 18
+         uses: actions/setup-node@v3
+         with:
+          node-version: 18
+
+
+       - name: Cache NPM dependencies
+         uses: actions/cache@v4
+         with:
+           path: node_modules
+           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
+
+       - name: Install Dependencies
+         run: npm install
+
+
+       - name: Run Coverage
+         continue-on-error: true
+         run: npm run coverage
+
+
+       - name: Archive Coverage Report
+         uses: actions/upload-artifact@v4
+         with:
+            name: coverage-report1
+            path: corvrage-results1.xml
