@@ -18,7 +18,7 @@ jobs:
     name: Unit Testing
     strategy:
       matrix:
-        nodejs_version: [18, 20]
+        nodejs_version: [18]
         operating_system: [ubuntu-latest]
         # exclude:
         # - nodejs_version: 18
@@ -54,8 +54,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mocha-test-results1
-          path: test-results1.xml
+          name: mocha-test-results2
+          path: test-results2.xml
 
 
   code-coverage:
@@ -91,8 +91,8 @@ jobs:
       - name: Archive Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report1
-          path: corvrage-results1.xml
+          name: coverage-report2
+          path: corvrage-results2.xml
 
 
   containerization:
@@ -310,7 +310,7 @@ jobs:
 
       - name: Fetch Kubernetes Cluster Details
         run: |
-          kubectl version --short
+          kubectl version
           echo "----- Nodes -----"
           kubectl get nodes
 
