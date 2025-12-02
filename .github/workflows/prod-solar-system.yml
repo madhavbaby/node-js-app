@@ -298,15 +298,29 @@ jobs:
 
 
   prod-deploy:
-    needs: [docker, dev-integration-testing]
+    needs: [docker, dev-integration-testing,dev-deploy]
     environment:
       name: production
+     # The 'url' link here will also correctly use the captured HOST value
       url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+    outputs:
+      # We map the step output to the job output
+      APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Install kubectl CLI
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.26.0'
+
+      - name: Configure kubeconfig context
+        uses: azure/k8s-set-context@v3
+        with:
+         method: kubeconfig
+         kubeconfig: ${{ secrets.KUBECONFIG }}
 
       - name: Fetch Kubernetes Cluster Details
         run: |
@@ -321,11 +335,12 @@ jobs:
             -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
 
 
-      - name: Replace Tokens in Production Manifests
+      - name: Replace tokens in manifests
         uses: cschleiden/replace-tokens@v1
         with:
-          tokenPrefix: '{,}'
-          files: '["kubernetes/production/*.yaml"]'
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: kubernetes/development/*.yaml
         env:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
@@ -337,14 +352,21 @@ jobs:
         run: cat kubernetes/production/*.yaml
 
 
-      - name: Create MongoDB Secret
+      - name: Create MongoDB Secret and Namespace (Conditionally)
         run: |
+          if ! kubectl get namespace ${{ vars.NAMESPACE }} &> /dev/null; then
+              echo "Namespace ${{ vars.NAMESPACE }} not found. Creating it now..."
+              kubectl create namespace ${{ vars.NAMESPACE }}
+          else
+              echo "Namespace ${{ vars.NAMESPACE }} already exists. Skipping creation."
+          fi
           kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
             --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
-            --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
+            --from-literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
             --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
-            --save-config --dry-run=client -o yaml | kubectl apply -f -
-
+            --save-config \
+            --dry-run=client \
+            -o yaml | kubectl apply -f -
 
       - name: Deploy to Production
         run: kubectl apply -f kubernetes/production
@@ -353,10 +375,14 @@ jobs:
       - name: Set App Ingress Host URL
         id: set-ingress-host-address
         run: |
-          echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress \
-            -o jsonpath='{.items[0].spec.tls[0].hosts[0]}')" >> $GITHUB_OUTPUT
-    outputs:
-      APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+          # **CORRECTION APPLIED HERE:**
+          # Using spec.rules[0].host is more robust for finding the Hostname
+          # compared to spec.tls[0].hosts[0] which requires a TLS configuration.
+          HOST=$(kubectl -n ${{ vars.NAMESPACE }} \
+            get ingress -o jsonpath='{.items[0].spec.rules[0].host}')
+          
+          echo "Captured HOST value: $HOST"
+          echo "APP_INGRESS_HOST=$HOST" >> "$GITHUB_OUTPUT" # Note: using APP_INGRESS_HOST as defined in outputs
 
   prod-integration-testing:
     name: Prod Integration Testing
