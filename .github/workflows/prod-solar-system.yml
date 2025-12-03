@@ -199,6 +199,7 @@ jobs:
 
   dev-deploy:
    needs: docker
+   if: contains(github.ref, 'feature/')
    environment:
       name: development
       # The 'url' link here will also correctly use the captured HOST value
@@ -283,6 +284,7 @@ jobs:
 
   dev-integration-testing:
     name: Dev Integration Testing
+    if: contains(github.ref, 'feature/')
     needs: dev-deploy
     runs-on: ubuntu-latest
     steps:
@@ -298,7 +300,8 @@ jobs:
 
 
   prod-deploy:
-    needs: [docker, dev-integration-testing,dev-deploy]
+    needs: [docker]
+    if: github.ref == 'refs/heads/main'
     environment:
       name: prod
      # The 'url' link here will also correctly use the captured HOST value
@@ -385,6 +388,7 @@ jobs:
           echo "APP_INGRESS_HOST=$HOST" >> "$GITHUB_OUTPUT" # Note: using APP_INGRESS_HOST as defined in outputs
 
   prod-integration-testing:
+    if: github.ref == 'refs/heads/main'
     name: Prod Integration Testing
     needs: prod-deploy
     runs-on: ubuntu-latest
