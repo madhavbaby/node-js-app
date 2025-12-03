@@ -301,7 +301,7 @@ jobs:
 
   prod-deploy:
     needs: [docker]
-    if: github.ref == 'refs/heads/masst'
+    if: github.ref == 'refs/heads/main'
     environment:
       name: prod
      # The 'url' link here will also correctly use the captured HOST value
